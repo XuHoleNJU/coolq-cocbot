@@ -1,0 +1,11 @@
+__pycache__/
+char_data/
+game_rules/
+admin.txt
+character.txt
+test.db
+test.txt
+test_class.py
+test_group.txt
+test_io.py
+user.db
