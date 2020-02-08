@@ -19,7 +19,6 @@ class Bot:
             return self.command_dict[cmd].handle(params)
 
     def check_priv(self, cmd, usr):
-        pass
         return True
     
     def rd6(self):
@@ -105,7 +104,6 @@ class RollDice:
     
     def command(self):
         pass
-        return 
 
 class MkChar:
     name =  'mkchar'
@@ -134,7 +132,7 @@ class MkChar:
             int = (2*self.rd6() + 6)*5
             pow = 3*self.rd6()*5
             edu = (2*self.rd6() + 6)*5
-            luc = (2*self.rd6+6)*5
+            luc = (2*self.rd6()+6)*5
             sum1 = strength + con + siz + dex + app + int + pow +edu
             sum2 = sum1 + luc
             msg = msg + '力量:'+str(strength)+' 体质:'+str(con)+' 体型:'+str(siz)+' 敏捷:'+str(dex)+' 外貌:'+str(app)+' 智力:'+str(int)+' 意志:'+str(pow)+' 教育:'+str(edu)+' 幸运:'+str(luc)+' 共计:'+str(sum1)+'('+str(sum2)+')\n'
