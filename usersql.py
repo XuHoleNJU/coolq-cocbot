@@ -1,6 +1,6 @@
 import sqlite3
 import json
-
+import sys
 # 两个类，角色卡信息和用户信息，都用dict初始化
 class Character:
     char_dict = {}
@@ -31,6 +31,7 @@ class User:
         self.username = user_dict['username']
         self.priv = user_dict['priv']
         self.char = user_dict['char']
+        self.groupinfo = user_dict['groupinfo'] #群昵称等信息
 
     def refresh_nickname(self, qqid):
         pass
@@ -38,125 +39,118 @@ class User:
     def disp_user(self):
         return self.user_dict
 
-char1_dict = {
-    'label' : 'Tom',
-    'name' : 'Thomas Edison',
-    'strength' : 90,
-    'con' : 80,
-    'siz' : 70,
-    'dex' : 60,
-    'app' : 50,
-    'int' : 40,
-    'pow' : 30,
-    'edu' : 20,
-    'luc' : 50,
-    'age' : 20,
-    'gender' : 'M'
+user_dict0 = {
+    'qqid' : 1,
+    'username' : '',
+    'priv' : 'gene',
+    'char' : '',
+    'groupinfo' : '',
 }
-char2_dict = {
-    'label' : 'terry',
-    'name' : 'Terry Geng',
-    'strength' : 50,
-    'con' : 50,
-    'siz' : 65,
-    'dex' : 45,
-    'app' : 50,
-    'int' : 75,
-    'pow' : 40,
-    'edu' : 70,
-    'luc' : 30,
-    'age' : 20,
-    'gender' : 'M'
-}
-char3_dict = {
-    'label' : 'lixi',
-    'name' : 'Xi Li',
-    'strength' : 40,
-    'con' : 50,
-    'siz' : 40,
-    'dex' : 60,
-    'app' : 60,
-    'int' : 75,
-    'pow' : 40,
-    'edu' : 70,
-    'luc' : 90,
-    'age' : 20,
-    'gender' : 'F'
-}
+
 default_char_dict = {
     'label' : 'default'
 }
 
-tomChar = Character(char1_dict)
-terryChar = Character(char2_dict)
-xiChar = Character(char3_dict)
-
-
-user1_dict = {
-    'qqid' : 1412893630,
-    'username' : '痰吐止禁',
-    'priv' :  'root',
-    'char' : [tomChar.disp_dict()]
-}
-
-user2_dict = {
-    'qqid' : 719034161,
-    'username' : '达',
-    'priv' :  'root',
-    'char' : [terryChar.disp_dict(), xiChar.disp_dict()]
-}
-
-xuholeUser = User(user1_dict)
-terryUser = User(user2_dict)
-
 class UserSQL:
-    def __init__(self):
-        self.conn = sqlite3.connect('user.db')
-        self.curs = self.conn.cursor
-    
+    def __init__(self, db):
+        self.db = db
+
     def sql_insert_user(self, user):
-        msg = ''' insert into user (qqid, username, privilege, character) \
-            values (%d, %s, %s, %s); \
-                ''' % (user.qqid, user.username, user.priv, json.dumps(user.char))
-        self.curs.execute(msg)
-        self.conn.commit()
+        userinfo = (user.qqid, user.username, user.priv, json.dumps(user.groupinfo), json.dumps(user.char))
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute('insert into user (qqid, username, privilege, groupinfo, character) \
+                values (?, ?, ?, ?, ?)', userinfo)
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return "error:" + str(sys.exc_info()[0]) + str(sys.exc_info()[1])
 
     def sql_select_user(self):
-        msg = "SELECT qqid, username, privilege, character from user"
-        cursor = self.curs.execute(msg)
-        return cursor
-    
+        cmd = "SELECT qqid, username, privilege, groupinfo, character from user"
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.execute(cmd)
+            data = []
+            for row in cursor:
+                data.append(row)
+            conn.close()
+            return data
+        except:
+            return "error:" + str(sys.exc_info()[0]) + str(sys.exc_info()[1])
+
+    def sql_get_user(self, qqid):
+        data = self.sql_select_user()
+        user_dict = user_dict0
+        for row in data:
+            if qqid == row[0]:
+                user_dict = {
+                    'qqid' : row[0],
+                    'username' : row[1],
+                    'priv' : row[2],
+                    'groupinfo' : row[3],
+                    'char' : row[4],
+                }
+        return User(user_dict)
+
     def sql_delete_user(self, user):
-        msg = "DELETE from user where qqid= %d ;" % (user.qqid)
-        self.curs.execute(msg)
-        self.conn.commit()
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute("DELETE from user where qqid= ?;", (user.qqid,))
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return "error:" + str(sys.exc_info()[0]) + str(sys.exc_info()[1])
     
     def sql_insert_char(self, user, char):
         user.char.append(char.disp_dict())
-        msg = '''update user set char = '%s' where qqid = %d 
-            ''' % (json.dumps(user.char), user.qqid)
-        self.curs.execute(msg)
-        self.conn.commit()
+        update = (json.dumps(user.char), user.qqid)
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute("update user set char = ? where qqid = ? ", update)
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return "error:" + str(sys.exc_info()[0]) + str(sys.exc_info()[1])
 
     def sql_delete_char(self, user, char):
         for i in range(len(user.char)):
             if user.char[i] == char.disp_dict():
                 del user.char[i]
                 break
-        msg = '''update user set char = '%s' where qqid = %d 
-            ''' % (json.dumps(user.char), user.qqid)
-        self.curs.execute(msg)
-        self.conn.commit()
+        update = (json.dumps(user.char), user.qqid)
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute("update user set char = ? where qqid = ? ", update)
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return "error:" + str(sys.exc_info()[0]) + str(sys.exc_info()[1])
 
     def sql_update_char(self, user, char_label, update_dict):
         for char_dict in user.char:
             if char_dict['label'] == char_label:
                 for key in update_dict.keys:
                     char_dict[str(key)] = update_dict[str(key)]
-        msg = '''update user set char = '%s' where qqid = %d 
-            ''' % (json.dumps(user.char), user.qqid)
-        self.curs.execute(msg)
-        self.conn.commit()
+        update = (json.dumps(user.char), user.qqid)
+        try:
+            conn = sqlite3.connect(self.db)
+            cursor = conn.cursor()
+            cursor.execute("update user set char = ? where qqid = ? ", update)
+            conn.commit()
+            conn.close()
+            return True
+        except:
+            return "error:" + sys.exc_info()[0] + sys.exc_info()[1]
+
 
 # conn = sqlite3.connect('user.db')
 # print("successfully opened")
@@ -166,6 +160,7 @@ class UserSQL:
 #     (qqid int primary key not null,
 #     username    text not null,
 #     privilege   text not null,
+#     groupinfo   text not null,
 #     character   text);
 #     ''')
 # print("table successfully created")

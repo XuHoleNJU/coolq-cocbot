@@ -1,0 +1,24 @@
+get_group_member_info(group_id, qq_id, no_cache) #no_cache = True
+返回一个dict, e.g.
+{"age": 20, 
+"area": "\u5f90\u5dde", #城市名，unicode
+"card": "", #群名片，没有则为空str
+"card_changeable": true, #若bot为管理员，则为True
+"group_id": 1030618409, 
+"join_time": 1579189048, #时间戳
+"last_sent_time": 1581654906, #时间戳
+"level": "\u5410\u69fd", #群等级，汉字
+"nickname": "\u75f0\u5410\u6b62\u7981", 
+"role": 3, #1=普通群员，2=管理员，3=群主
+"sex": 255, #255=男，1=女，0=未设置
+"title": "", #群头衔
+"title_expire_time": 0, #???
+"unfriendly": false, #???允许拉群内私聊???
+"user_id": 1412893630}
+
+get_group_member_list(group_id)
+返回一个list，元素是member_info的dict
+
+get_group_list()
+返回bot加入的所有群的list，元素是dict
+dict的key: "group_id", "group_name"
